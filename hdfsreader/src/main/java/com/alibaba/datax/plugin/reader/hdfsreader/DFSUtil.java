@@ -127,12 +127,7 @@ public class DFSUtil {
                 FileStatus stats[] = hdfs.globStatus(path);
                 for (FileStatus f : stats) {
                     if (f.isFile()) {
-                        if (f.getLen() == 0) {
-                            String message = String.format("文件[%s]长度为0，将会跳过不作处理！", hdfsPath);
-                            LOG.warn(message);
-                        } else {
-                            addSourceFileByType(f.getPath().toString());
-                        }
+                        addSourceFile(hdfsPath, f);
                     } else if (f.isDirectory()) {
                         getHDFSAllFilesNORegex(f.getPath().toString(), hdfs);
                     }
@@ -167,8 +162,7 @@ public class DFSUtil {
                 LOG.info(String.format("[%s] 是目录, 递归获取该目录下的文件", f.getPath().toString()));
                 getHDFSAllFilesNORegex(f.getPath().toString(), hdfs);
             } else if (f.isFile()) {
-
-                addSourceFileByType(f.getPath().toString());
+                addSourceFile(path, f);
             } else {
                 String message = String.format("该路径[%s]文件类型既不是目录也不是文件，插件自动忽略。",
                         f.getPath().toString());
@@ -176,6 +170,16 @@ public class DFSUtil {
             }
         }
         return sourceHDFSAllFilesList;
+    }
+
+    //添加文件，前置处理空文件
+    private void addSourceFile(String hdfsPath, FileStatus f) {
+        if (f.getLen() == 0) {
+            String message = String.format("文件[%s]长度为0，将会跳过不作处理！", hdfsPath);
+            LOG.warn(message);
+        } else {
+            addSourceFileByType(f.getPath().toString());
+        }
     }
 
     // 根据用户指定的文件类型，将指定的文件类型的路径加入sourceHDFSAllFilesList
